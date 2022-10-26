@@ -1,6 +1,6 @@
 import numpy as np
 
-def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=0.1, time:int=400):
+def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=1, time:int=400):
     """ Reproduces Figure 2: Modelization of the bisatabilty of the model FHN
 
     Args:
@@ -19,10 +19,8 @@ def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=0.1, time:int=40
     N = int(time / dt)
 
     # Initialization
-    mat_U = np.zeros(N)
-    mat_V = np.zeros(N)
-    mat_U[0] = u_init
-    mat_V[0] = v_init
+    mat_U, mat_V = np.zeros(N), np.zeros(N)
+    mat_U[0], mat_V[0] = u_init, v_init
 
     # Algorithm
     for i in range(0, N-1):
@@ -30,3 +28,38 @@ def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=0.1, time:int=40
         mat_V[i+1] = mat_V[i] + (E*(mat_U[i] - B*mat_V[i] + A))*dt
 
     return mat_U, mat_V
+
+def fhn_space(u_init:float=-0.6, v_init:float=-0.3, B:float=1, dt:float=1, time:int=400, width:int=400):
+    # Parameters
+    A = 0.1
+    E = 0.01
+
+    #Initialization
+    #Each position has a heat profile in time
+    mat_U, mat_V = np.full((width, time), u_init), np.full((width, time), v_init)
+    mat_U[180:220, 0] = 1
+
+    #Algorithm
+    for j in range(0, time-1): #for each timepoint
+        for i in range(1, width-1): #for each position
+            mat_U[i, j + 1] = mat_U[i, j] + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j])*dt
+            mat_V[i, j + 1] = mat_V[i, j] + (E * (mat_U[i, j] - B*mat_V[i, j] + A))*dt
+    return mat_U
+
+def fhn_space_diffusion(u_init:float=-0.6, v_init:float=-0.3, B:float=1, D:float=1, dt:float=1, dx:float=1, time:int=400, width:int=400):
+    # Parameters
+    A = 0.1
+    E = 0.01
+
+    #INIT
+    #each position has a heat profile in time
+    mat_U, mat_V = np.full((width, time), u_init), np.full((width, time), v_init)
+    mat_U[180:220, :] = 1
+
+    #ALGO
+    for j in range(0, time-1): #for each timepoint
+        for i in range(1, width-1): #for each position
+            mat_U[i, j + 1] = mat_U[i, j] + (D*dt/dx**2) * (mat_U[i+1, j] - 2*mat_U[i,j] + mat_U[i-1, j]) + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j])
+            mat_V[i, j + 1] = mat_V[i, j] + (D*dt/dx**2) * (mat_V[i+1, j] - 2*mat_V[i, j] + mat_V[i-1, j]) + (E * (mat_U[i, j] - B*mat_V[i, j] + A))
+    return mat_U
+
