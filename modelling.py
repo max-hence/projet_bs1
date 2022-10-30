@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=1, time:int=400):
     """ Reproduces Figure 2: Modelization of the bisatabilty of the model FHN
@@ -28,6 +29,12 @@ def fhn_modelling(u_init:float, v_init:float, B:float, dt:float=1, time:int=400)
         mat_V[i+1] = mat_V[i] + (E*(mat_U[i] - B*mat_V[i] + A))*dt
 
     return mat_U, mat_V
+
+def u_nullcline(u):
+    return u - u**3
+
+def v_nullcline(v, B):
+    return B*v - 0.1
 
 def fhn_space(u_init:float=-0.6, v_init:float=-0.3, B:float=1, dt:float=1, time:int=400, width:int=400):
     # Parameters
@@ -59,7 +66,6 @@ def fhn_space_diffusion(u_init:float=-0.6, v_init:float=-0.3, B:float=1, D:float
     #ALGO
     for j in range(0, time-1): #for each timepoint
         for i in range(1, width-1): #for each position
-            mat_U[i, j + 1] = mat_U[i, j] + (D*dt/dx**2) * (mat_U[i+1, j] - 2*mat_U[i,j] + mat_U[i-1, j]) + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j])
-            mat_V[i, j + 1] = mat_V[i, j] + (D*dt/dx**2) * (mat_V[i+1, j] - 2*mat_V[i, j] + mat_V[i-1, j]) + (E * (mat_U[i, j] - B*mat_V[i, j] + A))
+            mat_U[i, j + 1] = mat_U[i, j] + (D*dt/dx**2) * (mat_U[i+1, j] - 2*mat_U[i,j] + mat_U[i-1, j]) + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j]) * dt
+            mat_V[i, j + 1] = mat_V[i, j] + (D*dt/dx**2) * (mat_V[i+1, j] - 2*mat_V[i, j] + mat_V[i-1, j]) + (E * (mat_U[i, j] - B*mat_V[i, j] + A)) * dt
     return mat_U
-
