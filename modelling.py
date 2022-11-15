@@ -48,24 +48,37 @@ def fhn_space(u_init:float=-0.6, v_init:float=-0.3, B:float=1, dt:float=1, time:
 
     #Algorithm
     for j in range(0, time-1): #for each timepoint
+        mat_U[0, j + 1] = mat_U[0, j] + (mat_U[0, j] - mat_U[0, j]**3 - mat_V[0, j])*dt
+        mat_V[0, j + 1] = mat_V[0, j] + (E * (mat_U[0, j] - B*mat_V[0, j] + A))*dt
+
         for i in range(1, width-1): #for each position
             mat_U[i, j + 1] = mat_U[i, j] + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j])*dt
             mat_V[i, j + 1] = mat_V[i, j] + (E * (mat_U[i, j] - B*mat_V[i, j] + A))*dt
+
+        mat_U[width-1, j + 1] = mat_U[width-1, j] + (mat_U[width-1, j] - mat_U[width-1, j]**3 - mat_V[width-1, j])*dt
+        mat_V[width-1, j + 1] = mat_V[width-1, j] + (E * (mat_U[width-1, j] - B*mat_V[width-1, j] + A))*dt
     return mat_U
 
 def fhn_space_diffusion(u_init:float=-0.6, v_init:float=-0.3, B:float=1, D:float=1, dt:float=1, dx:float=1, time:int=400, width:int=400):
     # Parameters
     A = 0.1
     E = 0.01
-
+    F = (D*dt/dx**2)
     #INIT
     #each position has a heat profile in time
     mat_U, mat_V = np.full((width, time), u_init), np.full((width, time), v_init)
     mat_U[180:220, :] = 1
 
+
     #ALGO
-    for j in range(0, time-1): #for each timepoint
-        for i in range(1, width-1): #for each position
-            mat_U[i, j + 1] = mat_U[i, j] + (D*dt/dx**2) * (mat_U[i+1, j] - 2*mat_U[i,j] + mat_U[i-1, j]) + (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j]) * dt
-            mat_V[i, j + 1] = mat_V[i, j] + (D*dt/dx**2) * (mat_V[i+1, j] - 2*mat_V[i, j] + mat_V[i-1, j]) + (E * (mat_U[i, j] - B*mat_V[i, j] + A)) * dt
+    for j in range(0, time-1):
+        mat_U[0, j + 1] = mat_U[0, j] + F * (mat_U[0+1, j] - mat_U[0, j])  +   (mat_U[0, j] - mat_U[0, j]**3 - mat_V[0, j])*dt
+        mat_V[0, j + 1] = mat_V[0, j] + F * (mat_V[0+1, j] - mat_V[0, j])   +   (E * (mat_U[0, j] - B*mat_V[0, j] + A))*dt
+
+        for i in range(1, width-1):
+            mat_U[i, j + 1] = mat_U[i, j] + F * (mat_U[i+1, j] - 2*mat_U[i, j] + mat_U[i-1, j])  +   (mat_U[i, j] - mat_U[i, j]**3 - mat_V[i, j])*dt
+            mat_V[i, j + 1] = mat_V[i, j] + F * (mat_V[i+1, j] - 2*mat_V[i, j] + mat_V[i-1, j])  +   (E * (mat_U[i, j] - B*mat_V[i, j] + A))*dt
+
+        mat_U[width-1, j + 1] = mat_U[width-1, j] + F * (mat_U[width-1-1, j] - mat_U[width-1, j])  +   (mat_U[width-1, j] - mat_U[width-1, j]**3 - mat_V[width-1, j])*dt
+        mat_V[width-1, j + 1] = mat_V[width-1, j] + F * (mat_V[width-1-1, j] - mat_V[width-1, j])  +   (E * (mat_U[width-1, j] - B*mat_V[width-1, j] + A))*dt
     return mat_U
